@@ -1,4 +1,4 @@
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Checkbox } from '@/shared/ui/checkbox';
@@ -15,11 +15,12 @@ export function TodoItem({ todo }: TodoItemProps) {
   const updateMutation = useUpdateTodo();
   const deleteMutation = useDeleteTodo();
   const undoneRef = useRef(false);
+  const [hidden, setHidden] = useState(false);
 
   const handleToggle = useCallback(() => {
     if (!todo.completed) {
-      // Marking as complete: show undo toast, delay API call
       undoneRef.current = false;
+      setHidden(true);
 
       toast('Tarea completada', {
         description: todo.title,
@@ -27,6 +28,7 @@ export function TodoItem({ todo }: TodoItemProps) {
           label: 'Deshacer',
           onClick: () => {
             undoneRef.current = true;
+            setHidden(false);
           },
         },
         duration: 5000,
@@ -42,7 +44,6 @@ export function TodoItem({ todo }: TodoItemProps) {
         },
       });
     } else {
-      // Unchecking a completed todo: immediate
       updateMutation.mutate({ id: todo.id, data: { completed: false } });
     }
   }, [todo, updateMutation]);
@@ -54,6 +55,8 @@ export function TodoItem({ todo }: TodoItemProps) {
       },
     });
   }, [todo.id, deleteMutation]);
+
+  if (hidden) return null;
 
   return (
     <Card className="p-4 flex items-start gap-3">
